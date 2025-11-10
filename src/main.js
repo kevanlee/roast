@@ -1,15 +1,205 @@
 import './style.css';
 
+const PRESET_TOOLS = [
+  'Slack',
+  'Notion',
+  'HubSpot',
+  'Salesforce',
+  'Jira',
+  'Asana',
+  'Google Sheets',
+  'Airtable',
+  'Zapier',
+  'Trello',
+  'Linear',
+  'Confluence',
+];
+
+const SYSTEM_PROMPT = `You are a witty but kind AI consultant who roasts bad tech stacks with humor and insight.
+Always give:
+- A numeric score (0–100) for stack sanity.
+- A 2–3 sentence roast that’s funny but insightful.
+- One tip for improvement.
+Format your reply like:
+Score: [number]/100
+Roast: [text]
+Tip: [text]`;
+
+const API_URL = 'https://api.openai.com/v1/chat/completions';
+
 const app = document.querySelector('#app');
 
+const toolOptions = PRESET_TOOLS.map(
+  (tool, index) => `
+    <label class="tool-option">
+      <input type="checkbox" name="tools" value="${tool}" aria-describedby="tool-${index}" />
+      <span id="tool-${index}">${tool}</span>
+    </label>`
+).join('');
+
 app.innerHTML = `
-  <main>
-    <h1>Roast</h1>
-    <p>Time to build something awesome.</p>
-    <button id="cta">Launch</button>
+  <main class="app-shell">
+    <header class="hero">
+      <h1>Roast My Tech Stack</h1>
+      <p>Select the tools in your stack and let our resident snark specialist evaluate your choices.</p>
+    </header>
+
+    <form id="stack-form" class="stack-form">
+      <section class="fieldset">
+        <h2>Popular tools</h2>
+        <div class="tool-grid">
+          ${toolOptions}
+        </div>
+      </section>
+
+      <label class="other-input" for="other-tools">
+        <span>Other tools (comma separated)</span>
+        <textarea id="other-tools" name="otherTools" rows="3" placeholder="Figma, Custom CRM, Legacy ERP..."></textarea>
+      </label>
+
+      <button type="submit" class="primary-button">Roast my stack</button>
+      <p id="status" class="status" aria-live="polite"></p>
+    </form>
+
+    <section id="roast-card" class="roast-card hidden" aria-live="polite">
+      <h2>🔥 Your Roast Is Ready</h2>
+      <pre id="roast-output" class="roast-output"></pre>
+      <button id="share-roast" type="button" class="secondary-button hidden">Copy roast</button>
+    </section>
   </main>
 `;
 
-document.querySelector('#cta').addEventListener('click', () => {
-  alert('🚀 Roast is on the launchpad!');
+const form = document.querySelector('#stack-form');
+const statusEl = document.querySelector('#status');
+const roastCard = document.querySelector('#roast-card');
+const roastOutput = document.querySelector('#roast-output');
+const shareButton = document.querySelector('#share-roast');
+const otherToolsInput = document.querySelector('#other-tools');
+
+const toggleFormDisabled = (isDisabled) => {
+  const controls = form.querySelectorAll('input, textarea, button');
+  controls.forEach((control) => {
+    control.disabled = isDisabled;
+  });
+};
+
+const getApiKey = () => import.meta.env.VITE_OPENAI_API_KEY;
+
+const buildToolList = () => {
+  const selected = Array.from(
+    form.querySelectorAll('input[name="tools"]:checked'),
+    (checkbox) => checkbox.value
+  );
+
+  const others = otherToolsInput.value
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+  const combined = [...selected, ...others];
+
+  return combined;
+};
+
+const displayRoast = (roastText) => {
+  if (!roastText) {
+    roastCard.classList.add('hidden');
+    roastOutput.textContent = '';
+    shareButton.classList.add('hidden');
+    return;
+  }
+
+  roastOutput.textContent = roastText;
+  roastCard.classList.remove('hidden');
+  shareButton.classList.remove('hidden');
+};
+
+const showStatus = (message) => {
+  statusEl.textContent = message;
+};
+
+const callOpenAI = async (toolList) => {
+  const apiKey = getApiKey();
+
+  if (!apiKey) {
+    throw new Error(
+      'Missing OpenAI API key. Set VITE_OPENAI_API_KEY in your environment and restart the dev server.'
+    );
+  }
+
+  const response = await fetch(API_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      Authorization: `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({
+      model: 'gpt-4o-mini',
+      messages: [
+        { role: 'system', content: SYSTEM_PROMPT },
+        { role: 'user', content: `Here’s the tech stack: ${toolList}.` },
+      ],
+      max_tokens: 300,
+      temperature: 0.8,
+    }),
+  });
+
+  if (!response.ok) {
+    throw new Error('OpenAI API request failed.');
+  }
+
+  const data = await response.json();
+  const roastText = data?.choices?.[0]?.message?.content?.trim();
+
+  if (!roastText) {
+    throw new Error('The Roast Bot returned an empty response.');
+  }
+
+  return roastText;
+};
+
+form.addEventListener('submit', async (event) => {
+  event.preventDefault();
+
+  const toolList = buildToolList();
+
+  if (toolList.length === 0) {
+    showStatus('Tell me about at least one tool before I start roasting.');
+    displayRoast('');
+    return;
+  }
+
+  showStatus('Analyzing your tech stack... sharpening the knives 🔪…');
+  toggleFormDisabled(true);
+
+  try {
+    const roast = await callOpenAI(toolList.join(', '));
+    displayRoast(roast);
+    showStatus('');
+  } catch (error) {
+    console.error(error);
+    displayRoast('');
+    showStatus('The Roast Bot is taking a break. Try again in a minute.');
+  } finally {
+    toggleFormDisabled(false);
+  }
+});
+
+shareButton.addEventListener('click', async () => {
+  const roastText = roastOutput.textContent.trim();
+  if (!roastText) {
+    return;
+  }
+
+  try {
+    await navigator.clipboard.writeText(roastText);
+    shareButton.textContent = 'Copied!';
+  } catch (error) {
+    console.error(error);
+    shareButton.textContent = 'Copy failed';
+  } finally {
+    setTimeout(() => {
+      shareButton.textContent = 'Copy roast';
+    }, 2000);
+  }
 });
