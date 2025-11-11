@@ -6,35 +6,32 @@ const TOOL_SECTIONS = [
     title: 'Popular tools',
     defaultTools: [
       'Slack',
-      'Notion',
+      'Microsoft Teams',
       'HubSpot',
       'Salesforce',
-      'Jira',
-      'Asana',
-      'Google Sheets',
-      'Airtable',
-      'Zapier',
-      'Trello',
+      'Google Drive',
+      'Dropbox',
+      'Zoom',
+      'Google Meet',
+      'QuickBooks',
+      'Xero',
+      'Zendesk',
+      'AWS',
+      'Azure',
+      'GitHub',
       'Linear',
-      'Confluence',
+      'Intercom',
+      'Figma',
     ],
   },
   {
     id: 'collaboration',
-    title: 'Collaboration tools',
+    title: 'Marketing tools',
     defaultTools: [
-      'Slack Huddles',
-      'Zoom',
-      'Microsoft Teams',
-      'Google Meet',
-      'ClickUp',
-      'Basecamp',
-      'Miro',
-      'Figma',
-      'Monday.com',
-      'Workplace',
-      'Dropbox Paper',
-      'Coda',
+      'Webflow',
+      'Squarespace',
+      'Ahrefs',
+      'Mailchimp',
     ],
   },
   {
@@ -44,15 +41,8 @@ const TOOL_SECTIONS = [
       'Okta',
       'Auth0',
       '1Password',
-      'CrowdStrike',
-      'Cloudflare Zero Trust',
-      'SentinelOne',
-      'Splunk',
-      'Datadog Security',
-      'Microsoft Defender',
-      'JumpCloud',
-      'AWS GuardDuty',
       'Snyk',
+      'Vanta',
     ],
   },
 ];
@@ -129,8 +119,8 @@ const renderToolSections = () =>
 app.innerHTML = `
   <main class="app-shell">
     <nav class="site-nav">
-      <div class="nav-logo" aria-label="Logo placeholder">Logo</div>
-      <button type="button" class="nav-cta">Talk to an expert</button>
+      <div class="nav-logo" aria-label="PRMT logo"><img src="/img/prmt-logo.png"></div>
+      <a href="https://prmt.com"><button type="button" class="nav-cta">Talk to an expert</button></a>
     </nav>
     <header class="hero">
       <h1>Roast My Tech Stack</h1>

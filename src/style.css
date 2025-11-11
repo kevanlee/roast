@@ -47,17 +47,13 @@ body {
 .nav-logo {
   display: inline-flex;
   align-items: center;
-  justify-content: center;
   width: 52px;
   height: 52px;
-  border-radius: 16px;
-  background: rgba(255, 85, 43, 0.12);
-  border: 1.5px dashed rgba(255, 85, 43, 0.5);
-  font-weight: 700;
-  font-size: 0.85rem;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: rgba(255, 85, 43, 0.9);
+}
+
+.nav-logo img {
+  width: 150px;
+  height: auto;
 }
 
 .nav-cta {
