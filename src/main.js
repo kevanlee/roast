@@ -167,7 +167,7 @@ app.innerHTML = `
 
     <section id="roast-card" class="roast-card hidden" aria-live="polite">
       <h2>🔥 Your Roast Is Ready</h2>
-      <pre id="roast-output" class="roast-output"></pre>
+      <div id="roast-output" class="roast-output" role="presentation"></div>
       <button id="share-roast" type="button" class="secondary-button hidden">Copy roast</button>
     </section>
   </main>
@@ -218,15 +218,105 @@ const buildCompanyDetails = () => {
   return details;
 };
 
-const displayRoast = (roastText) => {
+const parseRoastResponse = (roastText) => {
+  const sections = {
+    scoreRaw: '',
+    roast: '',
+    tip: '',
+    extras: [],
+  };
+
+  const lines = roastText
+    .split('\n')
+    .map((line) => line.trim())
+    .filter(Boolean);
+
+  let activeKey = '';
+
+  lines.forEach((line) => {
+    const normalized = line.toLowerCase();
+
+    if (normalized.startsWith('score:')) {
+      sections.scoreRaw = line.replace(/^[^:]+:/i, '').trim();
+      activeKey = '';
+      return;
+    }
+
+    if (normalized.startsWith('roast:')) {
+      sections.roast = line.replace(/^[^:]+:/i, '').trim();
+      activeKey = 'roast';
+      return;
+    }
+
+    if (normalized.startsWith('tip:')) {
+      sections.tip = line.replace(/^[^:]+:/i, '').trim();
+      activeKey = 'tip';
+      return;
+    }
+
+    if (activeKey) {
+      sections[activeKey] = `${sections[activeKey]}${sections[activeKey] ? '\n' : ''}${line}`;
+    } else {
+      sections.extras.push(line);
+    }
+  });
+
+  return sections;
+};
+
+const createParagraphs = (text) =>
+  text
+    .split(/\n{2,}|\r?\n/)
+    .map((paragraph) => paragraph.trim())
+    .filter(Boolean)
+    .map((paragraph) => `<p>${escapeHtml(paragraph)}</p>`)
+    .join('');
+
+const buildRoastHtml = (sections, companyDetails) => {
+  const scoreMatch = sections.scoreRaw.match(/(\d{1,3})(?:\s*\/\s*(\d{1,3}))?/);
+  const scoreValue = scoreMatch ? Number.parseInt(scoreMatch[1], 10) : undefined;
+  const scoreDenominator = scoreMatch && scoreMatch[2] ? scoreMatch[2] : '100';
+  const scoreText = sections.scoreRaw || '—';
+
+  const companyMeta = [companyDetails.name, companyDetails.size]
+    .map((item) => item && escapeHtml(item))
+    .filter(Boolean)
+    .join(' • ');
+
+  const extrasHtml = sections.extras.length
+    ? `<div class="roast-section"><h3>Bonus banter</h3>${createParagraphs(sections.extras.join('\n'))}</div>`
+    : '';
+
+  return `
+    ${companyMeta ? `<p class="roast-meta">${companyMeta}</p>` : ''}
+    <div class="roast-score" aria-label="Stack sanity score">
+      <span class="roast-score-value">${
+        Number.isFinite(scoreValue) ? escapeHtml(`${scoreValue}`) : escapeHtml(scoreText)
+      }</span>
+      <span class="roast-score-denominator">out of ${escapeHtml(scoreDenominator)}</span>
+    </div>
+    <div class="roast-section">
+      <h3>Roast</h3>
+      ${sections.roast ? createParagraphs(sections.roast) : '<p>OpenAI sent back a mysterious silence.</p>'}
+    </div>
+    <div class="roast-section">
+      <h3>Glow-up tip</h3>
+      ${sections.tip ? createParagraphs(sections.tip) : '<p>No tip this time—try again for more wisdom.</p>'}
+    </div>
+    ${extrasHtml}
+  `;
+};
+
+const displayRoast = (roastText, companyDetails = {}) => {
   if (!roastText) {
     roastCard.classList.add('hidden');
-    roastOutput.textContent = '';
+    roastOutput.innerHTML = '';
     shareButton.classList.add('hidden');
     return;
   }
 
-  roastOutput.textContent = roastText;
+  const sections = parseRoastResponse(roastText);
+  roastOutput.innerHTML = buildRoastHtml(sections, companyDetails);
   roastCard.classList.remove('hidden');
   shareButton.classList.remove('hidden');
 };
@@ -246,16 +336,8 @@ const callOpenAI = async ({ toolSummary, companyDetails }) => {
 
   const detailSnippets = [];
 
-  if (companyDetails.name) {
-    detailSnippets.push(`Company name: ${companyDetails.name}.`);
-  }
-
   if (companyDetails.size) {
     detailSnippets.push(`Company size: ${companyDetails.size}.`);
-  }
-
-  if (companyDetails.email) {
-    detailSnippets.push(`Point of contact: ${companyDetails.email}.`);
   }
 
   const response = await fetch(API_URL, {
@@ -270,7 +352,13 @@ const callOpenAI = async ({ toolSummary, companyDetails }) => {
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Here’s the tech stack: ${toolSummary}. ${detailSnippets.join(' ')}`.trim(),
+          content: [
+            `Here’s the tech stack: ${toolSummary}.`,
+            detailSnippets.filter(Boolean).join(' '),
+          ]
+            .filter(Boolean)
+            .join(' ')
+            .trim(),
         },
       ],
       max_tokens: 300,
@@ -300,7 +388,7 @@ form.addEventListener('submit', async (event) => {
 
   if (toolList.length === 0) {
     showStatus('Tell me about at least one tool before I start roasting.');
-    displayRoast('');
+    displayRoast('', companyDetails);
     return;
   }
 
@@ -312,11 +400,11 @@ form.addEventListener('submit', async (event) => {
       toolSummary: toolList.join(', '),
       companyDetails,
     });
-    displayRoast(roast);
+    displayRoast(roast, companyDetails);
     showStatus('');
   } catch (error) {
     console.error(error);
-    displayRoast('');
+    displayRoast('', companyDetails);
     showStatus('The Roast Bot is taking a break. Try again in a minute.');
   } finally {
     toggleFormDisabled(false);
