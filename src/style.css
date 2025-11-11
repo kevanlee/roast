@@ -36,6 +36,55 @@ body {
   gap: 2.75rem;
 }
 
+.site-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-bottom: 1.5rem;
+  border-bottom: 1px solid rgba(21, 21, 21, 0.08);
+}
+
+.nav-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 16px;
+  background: rgba(255, 85, 43, 0.12);
+  border: 1.5px dashed rgba(255, 85, 43, 0.5);
+  font-weight: 700;
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 85, 43, 0.9);
+}
+
+.nav-cta {
+  border: none;
+  border-radius: 999px;
+  background: #151515;
+  color: #ffffff;
+  font-family: inherit;
+  font-weight: 600;
+  font-size: 0.95rem;
+  padding: 0.75rem 1.75rem;
+  cursor: pointer;
+  box-shadow: 0 16px 40px rgba(21, 21, 21, 0.2);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.nav-cta:hover,
+.nav-cta:focus-visible {
+  transform: translateY(-1px);
+  box-shadow: 0 18px 44px rgba(21, 21, 21, 0.24);
+}
+
+.nav-cta:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 4px rgba(21, 21, 21, 0.18), 0 18px 44px rgba(21, 21, 21, 0.24);
+}
+
 .hero {
   display: grid;
   gap: 1.25rem;

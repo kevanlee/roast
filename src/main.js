@@ -128,6 +128,10 @@ const renderToolSections = () =>
 
 app.innerHTML = `
   <main class="app-shell">
+    <nav class="site-nav">
+      <div class="nav-logo" aria-label="Logo placeholder">Logo</div>
+      <button type="button" class="nav-cta">Talk to an expert</button>
+    </nav>
     <header class="hero">
       <h1>Roast My Tech Stack</h1>
       <p>Select the tools in your stack and let our resident snark specialist evaluate your choices.</p>
