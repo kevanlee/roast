@@ -5,7 +5,15 @@ export default [
   {
     files: ['src/**/*.js'],
     languageOptions: {
-      sourceType: 'module'
+      sourceType: 'module',
+      globals: {
+        document: 'readonly',
+        window: 'readonly',
+        fetch: 'readonly',
+        console: 'readonly',
+        navigator: 'readonly',
+        setTimeout: 'readonly',
+      },
     }
   }
 ];

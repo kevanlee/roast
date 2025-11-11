@@ -1,18 +1,60 @@
 import './style.css';
 
-const PRESET_TOOLS = [
-  'Slack',
-  'Notion',
-  'HubSpot',
-  'Salesforce',
-  'Jira',
-  'Asana',
-  'Google Sheets',
-  'Airtable',
-  'Zapier',
-  'Trello',
-  'Linear',
-  'Confluence',
+const TOOL_SECTIONS = [
+  {
+    id: 'popular',
+    title: 'Popular tools',
+    defaultTools: [
+      'Slack',
+      'Notion',
+      'HubSpot',
+      'Salesforce',
+      'Jira',
+      'Asana',
+      'Google Sheets',
+      'Airtable',
+      'Zapier',
+      'Trello',
+      'Linear',
+      'Confluence',
+    ],
+  },
+  {
+    id: 'collaboration',
+    title: 'Collaboration tools',
+    defaultTools: [
+      'Slack Huddles',
+      'Zoom',
+      'Microsoft Teams',
+      'Google Meet',
+      'ClickUp',
+      'Basecamp',
+      'Miro',
+      'Figma',
+      'Monday.com',
+      'Workplace',
+      'Dropbox Paper',
+      'Coda',
+    ],
+  },
+  {
+    id: 'security',
+    title: 'Security tools',
+    defaultTools: [
+      'Okta',
+      'Auth0',
+      '1Password',
+      'CrowdStrike',
+      'Cloudflare Zero Trust',
+      'SentinelOne',
+      'Splunk',
+      'Datadog Security',
+      'Microsoft Defender',
+      'JumpCloud',
+      'AWS GuardDuty',
+      'Snyk',
+    ],
+  },
 ];
 
 const SYSTEM_PROMPT = `You are a witty but kind AI consultant who roasts bad tech stacks with humor and insight.
@@ -29,13 +71,60 @@ const API_URL = 'https://api.openai.com/v1/chat/completions';
 
 const app = document.querySelector('#app');
 
-const toolOptions = PRESET_TOOLS.map(
-  (tool, index) => `
-    <label class="tool-option">
-      <input type="checkbox" name="tools" value="${tool}" aria-describedby="tool-${index}" />
-      <span id="tool-${index}">${tool}</span>
-    </label>`
-).join('');
+// The backend can inject additional tools by assigning a structure like:
+// window.__roastToolSections = { customTools: { security: ['Custom Tool'] } };
+// Each section pulls from its corresponding array, if provided.
+const getCustomToolsForSection = (sectionId) => {
+  const customToolData = window.__roastToolSections?.customTools;
+
+  if (!customToolData || typeof customToolData !== 'object') {
+    return [];
+  }
+
+  const candidateList = customToolData[sectionId];
+
+  if (!Array.isArray(candidateList)) {
+    return [];
+  }
+
+  return candidateList
+    .map((tool) => (typeof tool === 'string' ? tool.trim() : ''))
+    .filter(Boolean);
+};
+
+const escapeHtml = (unsafeString) =>
+  unsafeString
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+
+const createToolOption = (sectionId, index, tool) => `
+  <label class="tool-option">
+    <input type="checkbox" name="tools" value="${escapeHtml(tool)}" aria-describedby="tool-${sectionId}-${index}" />
+    <span id="tool-${sectionId}-${index}">${escapeHtml(tool)}</span>
+  </label>`;
+
+const renderToolSections = () =>
+  TOOL_SECTIONS.map((section) => {
+    const combinedTools = [
+      ...section.defaultTools,
+      ...getCustomToolsForSection(section.id),
+    ];
+
+    const options = combinedTools
+      .map((tool, index) => createToolOption(section.id, index, tool))
+      .join('');
+
+    return `
+      <section class="fieldset">
+        <h2>${section.title}</h2>
+        <div class="tool-grid">
+          ${options}
+        </div>
+      </section>`;
+  }).join('');
 
 app.innerHTML = `
   <main class="app-shell">
@@ -46,18 +135,32 @@ app.innerHTML = `
 
     <form id="stack-form" class="stack-form">
       <section class="fieldset">
-        <h2>Popular tools</h2>
-        <div class="tool-grid">
-          ${toolOptions}
+        <h2>Company details</h2>
+        <div class="input-grid">
+          <label class="text-input" for="company-name">
+            <span>Company name</span>
+            <input id="company-name" name="companyName" type="text" placeholder="Acme Corp" autocomplete="organization" />
+          </label>
+          <label class="text-input" for="company-size">
+            <span>Company size</span>
+            <select id="company-size" name="companySize" autocomplete="organization" aria-label="Company size">
+              <option value="" disabled selected>Select company size</option>
+              <option value="1-10">1-10</option>
+              <option value="11-50">11-50</option>
+              <option value="51-200">51-200</option>
+              <option value="201-500">201-500</option>
+              <option value="501-1000">501-1,000</option>
+              <option value="1001+">1,001+</option>
+            </select>
+          </label>
+          <label class="text-input" for="company-email">
+            <span>Work email</span>
+            <input id="company-email" name="companyEmail" type="email" placeholder="you@company.com" autocomplete="email" />
+          </label>
         </div>
       </section>
 
-      <section class="fieldset">
-        <h2>Collaboration tools</h2>
-        <div class="tool-grid">
-          ${toolOptions}
-        </div>
-      </section>
+      ${renderToolSections()}
 
       <label class="other-input" for="other-tools">
         <span>Other tools (comma separated)</span>
@@ -82,9 +185,12 @@ const roastCard = document.querySelector('#roast-card');
 const roastOutput = document.querySelector('#roast-output');
 const shareButton = document.querySelector('#share-roast');
 const otherToolsInput = document.querySelector('#other-tools');
+const companyNameInput = document.querySelector('#company-name');
+const companySizeSelect = document.querySelector('#company-size');
+const companyEmailInput = document.querySelector('#company-email');
 
 const toggleFormDisabled = (isDisabled) => {
-  const controls = form.querySelectorAll('input, textarea, button');
+  const controls = form.querySelectorAll('input, textarea, select, button');
   controls.forEach((control) => {
     control.disabled = isDisabled;
   });
@@ -108,6 +214,16 @@ const buildToolList = () => {
   return combined;
 };
 
+const buildCompanyDetails = () => {
+  const details = {
+    name: companyNameInput?.value.trim() ?? '',
+    size: companySizeSelect?.value ?? '',
+    email: companyEmailInput?.value.trim() ?? '',
+  };
+
+  return details;
+};
+
 const displayRoast = (roastText) => {
   if (!roastText) {
     roastCard.classList.add('hidden');
@@ -125,13 +241,27 @@ const showStatus = (message) => {
   statusEl.textContent = message;
 };
 
-const callOpenAI = async (toolList) => {
+const callOpenAI = async ({ toolSummary, companyDetails }) => {
   const apiKey = getApiKey();
 
   if (!apiKey) {
     throw new Error(
       'Missing OpenAI API key. Set VITE_OPENAI_API_KEY in your environment and restart the dev server.'
     );
+  }
+
+  const detailSnippets = [];
+
+  if (companyDetails.name) {
+    detailSnippets.push(`Company name: ${companyDetails.name}.`);
+  }
+
+  if (companyDetails.size) {
+    detailSnippets.push(`Company size: ${companyDetails.size}.`);
+  }
+
+  if (companyDetails.email) {
+    detailSnippets.push(`Point of contact: ${companyDetails.email}.`);
   }
 
   const response = await fetch(API_URL, {
@@ -144,7 +274,10 @@ const callOpenAI = async (toolList) => {
       model: 'gpt-4o-mini',
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
-        { role: 'user', content: `Here’s the tech stack: ${toolList}.` },
+        {
+          role: 'user',
+          content: `Here’s the tech stack: ${toolSummary}. ${detailSnippets.join(' ')}`.trim(),
+        },
       ],
       max_tokens: 300,
       temperature: 0.8,
@@ -169,6 +302,7 @@ form.addEventListener('submit', async (event) => {
   event.preventDefault();
 
   const toolList = buildToolList();
+  const companyDetails = buildCompanyDetails();
 
   if (toolList.length === 0) {
     showStatus('Tell me about at least one tool before I start roasting.');
@@ -180,7 +314,10 @@ form.addEventListener('submit', async (event) => {
   toggleFormDisabled(true);
 
   try {
-    const roast = await callOpenAI(toolList.join(', '));
+    const roast = await callOpenAI({
+      toolSummary: toolList.join(', '),
+      companyDetails,
+    });
     displayRoast(roast);
     showStatus('');
   } catch (error) {
