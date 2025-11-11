@@ -52,6 +52,13 @@ app.innerHTML = `
         </div>
       </section>
 
+      <section class="fieldset">
+        <h2>Collaboration tools</h2>
+        <div class="tool-grid">
+          ${toolOptions}
+        </div>
+      </section>
+
       <label class="other-input" for="other-tools">
         <span>Other tools (comma separated)</span>
         <textarea id="other-tools" name="otherTools" rows="3" placeholder="Figma, Custom CRM, Legacy ERP..."></textarea>
