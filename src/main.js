@@ -426,6 +426,9 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
+console.log("API key loaded:", !!import.meta.env.VITE_OPENAI_API_KEY);
+
+
 shareButton.addEventListener('click', async () => {
   const roastText = roastOutput.textContent.trim();
   if (!roastText) {
