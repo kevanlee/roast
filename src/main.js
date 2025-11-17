@@ -22,6 +22,7 @@ const TOOL_SECTIONS = [
       'Linear',
       'Intercom',
       'Figma',
+      'Notion',
     ],
   },
   {
