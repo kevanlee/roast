@@ -26,6 +26,10 @@ body {
   scrollbar-gutter: stable both-edges;
 }
 
+body.modal-open {
+  overflow: hidden;
+}
+
 .app-shell {
   width: min(960px, 100%);
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 244, 237, 0.96));
@@ -415,6 +419,86 @@ button:disabled {
 
 .hidden {
   display: none !important;
+}
+
+.share-modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(8, 8, 8, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  z-index: 999;
+}
+
+.share-modal__panel {
+  width: min(520px, 100%);
+  background: #fffdf8;
+  border-radius: 24px;
+  padding: 2rem;
+  position: relative;
+  display: grid;
+  gap: 1rem;
+  box-shadow: 0 40px 80px rgba(0, 0, 0, 0.25);
+}
+
+.share-modal__close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: none;
+  background: rgba(21, 21, 21, 0.08);
+  font-size: 1.5rem;
+  cursor: pointer;
+}
+
+.share-modal__intro {
+  margin: 0;
+  color: rgba(21, 21, 21, 0.75);
+}
+
+.share-modal__preview {
+  background: #0e1b2b;
+  border-radius: 18px;
+  padding: 0.5rem;
+  border: 1px solid rgba(21, 21, 21, 0.1);
+}
+
+.share-modal__preview img {
+  width: 100%;
+  border-radius: 14px;
+  display: block;
+}
+
+.share-modal__label {
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: rgba(21, 21, 21, 0.7);
+}
+
+.share-modal__textarea {
+  border-radius: 16px;
+  border: 1.5px solid rgba(21, 21, 21, 0.12);
+  padding: 1rem;
+  background: rgba(253, 251, 246, 0.9);
+  font-family: inherit;
+  resize: none;
+}
+
+.share-modal__actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.share-modal__actions button {
+  flex: 1 1 200px;
 }
 
 @media (max-width: 720px) {

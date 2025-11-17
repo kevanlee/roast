@@ -205,7 +205,7 @@ app.innerHTML = `
       <h2>🔥 Your Roast Is Ready</h2>
       <div id="roast-output" class="roast-output" role="presentation"></div>
       <div class="roast-actions">
-        <button id="share-roast" type="button" class="secondary-button hidden">Copy roast</button>
+        <button id="share-roast" type="button" class="secondary-button hidden">Copy / Share</button>
         <a
           id="expert-cta"
           class="expert-button hidden"
@@ -215,6 +215,23 @@ app.innerHTML = `
         >
           Speak to an expert
         </a>
+      </div>
+    </section>
+
+    <section id="share-modal" class="share-modal hidden" role="dialog" aria-modal="true" aria-labelledby="share-modal-title">
+      <div class="share-modal__panel">
+        <button id="close-share-modal" type="button" class="share-modal__close" aria-label="Close share options">&times;</button>
+        <h3 id="share-modal-title">Share your roast</h3>
+        <p class="share-modal__intro">Grab a roast-ready caption or download a branded card for LinkedIn, Twitter, or anywhere else you thrive.</p>
+        <div class="share-modal__preview" role="presentation">
+          <img id="share-preview" alt="Roast share card preview" />
+        </div>
+        <label class="share-modal__label" for="share-text">Suggested caption</label>
+        <textarea id="share-text" class="share-modal__textarea" rows="4" readonly></textarea>
+        <div class="share-modal__actions">
+          <button id="copy-share-text" type="button" class="secondary-button">Copy caption</button>
+          <button id="download-share-image" type="button" class="primary-button">Download card</button>
+        </div>
       </div>
     </section>
   </main>
@@ -230,6 +247,15 @@ const otherToolsInput = document.querySelector('#other-tools');
 const companyNameInput = document.querySelector('#company-name');
 const companySizeSelect = document.querySelector('#company-size');
 const companyEmailInput = document.querySelector('#company-email');
+const shareModal = document.querySelector('#share-modal');
+const closeShareModalButton = document.querySelector('#close-share-modal');
+const sharePreviewImage = document.querySelector('#share-preview');
+const shareTextArea = document.querySelector('#share-text');
+const copyShareTextButton = document.querySelector('#copy-share-text');
+const downloadShareImageButton = document.querySelector('#download-share-image');
+
+let latestRoastShareData = null;
+let latestShareImageUrl = '';
 
 const toggleFormDisabled = (isDisabled) => {
   const controls = form.querySelectorAll('input, textarea, select, button');
@@ -355,12 +381,100 @@ const buildRoastHtml = (sections, companyDetails) => {
   `;
 };
 
+const buildShareCaption = (sections, companyDetails) => {
+  const scoreText = sections.scoreRaw || '—/100';
+  const snippet = sections.roast?.split(/(?<=\.)\s+/)?.[0] ?? '';
+  const companyName = companyDetails.name || 'Our stack';
+
+  const parts = [
+    `${companyName} just scored ${scoreText} in PRMT's Roast My Tech Stack.`,
+    snippet,
+    'Think you can handle the truth? https://prmt.com/roast',
+    '#RoastMyStack #PRMT #TechStack',
+  ];
+
+  return parts.filter(Boolean).join('\n\n');
+};
+
+const wrapText = (ctx, text, x, y, maxWidth, lineHeight) => {
+  const words = text.split(' ');
+  let line = '';
+
+  words.forEach((word) => {
+    const testLine = `${line}${word} `;
+    const metrics = ctx.measureText(testLine);
+    if (metrics.width > maxWidth && line) {
+      ctx.fillText(line, x, y);
+      line = `${word} `;
+      y += lineHeight;
+    } else {
+      line = testLine;
+    }
+  });
+
+  if (line) {
+    ctx.fillText(line, x, y);
+  }
+};
+
+const createShareImageDataUrl = (sections, companyDetails) => {
+  const canvas = document.createElement('canvas');
+  const width = 1200;
+  const height = 630;
+  canvas.width = width;
+  canvas.height = height;
+  const ctx = canvas.getContext('2d');
+
+  const gradient = ctx.createLinearGradient(0, 0, width, height);
+  gradient.addColorStop(0, '#030712');
+  gradient.addColorStop(0.5, '#0e1b2b');
+  gradient.addColorStop(1, '#ff552b');
+  ctx.fillStyle = gradient;
+  ctx.fillRect(0, 0, width, height);
+
+  ctx.fillStyle = 'rgba(255, 255, 255, 0.15)';
+  for (let i = -height; i < width; i += 120) {
+    ctx.beginPath();
+    ctx.ellipse(i + 200, height / 2, 260, 420, 0, 0, Math.PI * 2);
+    ctx.fill();
+  }
+
+  const companyName = companyDetails.name || 'Your stack';
+  const scoreMatch = sections.scoreRaw?.match(/(\d{1,3})/);
+  const scoreValue = scoreMatch ? scoreMatch[1] : '—';
+  const snippet = sections.roast?.split(/(?<=\.)\s+/)?.[0] ?? 'PRMT just dragged my stack—politely.';
+
+  ctx.fillStyle = '#ffffff';
+  ctx.font = '700 60px "Space Grotesk", "Inter", sans-serif';
+  ctx.fillText('Roast My Tech Stack', 80, 120);
+
+  ctx.font = '600 42px "Space Grotesk", "Inter", sans-serif';
+  ctx.fillText(companyName, 80, 200);
+
+  ctx.font = '400 34px "Space Grotesk", "Inter", sans-serif';
+  wrapText(ctx, snippet, 80, 260, width - 160, 48);
+
+  ctx.font = '700 210px "Space Grotesk", "Inter", sans-serif';
+  ctx.textAlign = 'right';
+  ctx.fillText(scoreValue, width - 80, height - 140);
+
+  ctx.font = '600 36px "Space Grotesk", "Inter", sans-serif';
+  ctx.fillText('out of 100', width - 80, height - 90);
+
+  ctx.textAlign = 'left';
+  ctx.font = '500 28px "Space Grotesk", "Inter", sans-serif';
+  ctx.fillText('Roasted by PRMT', 80, height - 90);
+
+  return canvas.toDataURL('image/png');
+};
+
 const displayRoast = (roastText, companyDetails = {}) => {
   if (!roastText) {
     roastCard.classList.add('hidden');
     roastOutput.innerHTML = '';
     shareButton.classList.add('hidden');
     expertButton.classList.add('hidden');
+    latestRoastShareData = null;
     return;
   }
 
@@ -369,6 +483,37 @@ const displayRoast = (roastText, companyDetails = {}) => {
   roastCard.classList.remove('hidden');
   shareButton.classList.remove('hidden');
   expertButton.classList.remove('hidden');
+  latestRoastShareData = { sections, companyDetails };
+};
+
+const updateShareModalContent = () => {
+  if (!latestRoastShareData) {
+    return;
+  }
+
+  const { sections, companyDetails } = latestRoastShareData;
+  const caption = buildShareCaption(sections, companyDetails);
+  shareTextArea.value = caption;
+  latestShareImageUrl = createShareImageDataUrl(sections, companyDetails);
+  sharePreviewImage.src = latestShareImageUrl;
+  sharePreviewImage.alt = `${companyDetails.name || 'Your stack'} roast share card`;
+};
+
+const openShareModal = () => {
+  if (!latestRoastShareData) {
+    return;
+  }
+
+  updateShareModalContent();
+  shareModal.classList.remove('hidden');
+  document.body.classList.add('modal-open');
+  closeShareModalButton?.focus();
+};
+
+const closeShareModal = () => {
+  shareModal.classList.add('hidden');
+  document.body.classList.remove('modal-open');
+  shareButton?.focus();
 };
 
 const showStatus = (message) => {
@@ -461,24 +606,60 @@ form.addEventListener('submit', async (event) => {
   }
 });
 
-console.log("API key loaded:", !!import.meta.env.VITE_OPENAI_API_KEY);
+console.log('API key loaded:', !!import.meta.env.VITE_OPENAI_API_KEY);
 
+shareButton.addEventListener('click', () => {
+  if (!latestRoastShareData) {
+    return;
+  }
+  openShareModal();
+});
 
-shareButton.addEventListener('click', async () => {
-  const roastText = roastOutput.textContent.trim();
-  if (!roastText) {
+closeShareModalButton.addEventListener('click', closeShareModal);
+
+shareModal.addEventListener('click', (event) => {
+  if (event.target === shareModal) {
+    closeShareModal();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && !shareModal.classList.contains('hidden')) {
+    closeShareModal();
+  }
+});
+
+copyShareTextButton.addEventListener('click', async () => {
+  if (!shareTextArea.value) {
     return;
   }
 
+  const original = copyShareTextButton.textContent;
+
   try {
-    await navigator.clipboard.writeText(roastText);
-    shareButton.textContent = 'Copied!';
+    await navigator.clipboard.writeText(shareTextArea.value);
+    copyShareTextButton.textContent = 'Copied!';
   } catch (error) {
     console.error(error);
-    shareButton.textContent = 'Copy failed';
+    copyShareTextButton.textContent = 'Copy failed';
   } finally {
     setTimeout(() => {
-      shareButton.textContent = 'Copy roast';
+      copyShareTextButton.textContent = original;
     }, 2000);
   }
+});
+
+downloadShareImageButton.addEventListener('click', () => {
+  if (!latestShareImageUrl) {
+    return;
+  }
+
+  const link = document.createElement('a');
+  link.href = latestShareImageUrl;
+  link.download = `prmt-roast-${Date.now()}.png`;
+  link.click();
+  downloadShareImageButton.textContent = 'Card saved!';
+  setTimeout(() => {
+    downloadShareImageButton.textContent = 'Download card';
+  }, 2000);
 });
