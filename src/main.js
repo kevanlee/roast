@@ -148,12 +148,25 @@ app.innerHTML = `
         <h2>Company details</h2>
         <div class="input-grid">
           <label class="text-input" for="company-name">
-            <span>Company name</span>
-            <input id="company-name" name="companyName" type="text" placeholder="Acme Corp" autocomplete="organization" />
+            <span>Business name</span>
+            <input
+              id="company-name"
+              name="companyName"
+              type="text"
+              placeholder="Acme Corp"
+              autocomplete="organization"
+              required
+            />
           </label>
           <label class="text-input" for="company-size">
             <span>Company size</span>
-            <select id="company-size" name="companySize" autocomplete="organization" aria-label="Company size">
+            <select
+              id="company-size"
+              name="companySize"
+              autocomplete="organization"
+              aria-label="Company size"
+              required
+            >
               <option value="" disabled selected>Select company size</option>
               <option value="1-10">1-10</option>
               <option value="11-50">11-50</option>
@@ -165,7 +178,14 @@ app.innerHTML = `
           </label>
           <label class="text-input" for="company-email">
             <span>Work email</span>
-            <input id="company-email" name="companyEmail" type="email" placeholder="you@company.com" autocomplete="email" />
+            <input
+              id="company-email"
+              name="companyEmail"
+              type="email"
+              placeholder="you@company.com"
+              autocomplete="email"
+              required
+            />
           </label>
         </div>
       </section>
@@ -184,7 +204,18 @@ app.innerHTML = `
     <section id="roast-card" class="roast-card hidden" aria-live="polite">
       <h2>🔥 Your Roast Is Ready</h2>
       <div id="roast-output" class="roast-output" role="presentation"></div>
-      <button id="share-roast" type="button" class="secondary-button hidden">Copy roast</button>
+      <div class="roast-actions">
+        <button id="share-roast" type="button" class="secondary-button hidden">Copy roast</button>
+        <a
+          id="expert-cta"
+          class="expert-button hidden"
+          href="https://prmt.com/contact"
+          target="_blank"
+          rel="noreferrer"
+        >
+          Speak to an expert
+        </a>
+      </div>
     </section>
   </main>
 `;
@@ -194,6 +225,7 @@ const statusEl = document.querySelector('#status');
 const roastCard = document.querySelector('#roast-card');
 const roastOutput = document.querySelector('#roast-output');
 const shareButton = document.querySelector('#share-roast');
+const expertButton = document.querySelector('#expert-cta');
 const otherToolsInput = document.querySelector('#other-tools');
 const companyNameInput = document.querySelector('#company-name');
 const companySizeSelect = document.querySelector('#company-size');
@@ -328,6 +360,7 @@ const displayRoast = (roastText, companyDetails = {}) => {
     roastCard.classList.add('hidden');
     roastOutput.innerHTML = '';
     shareButton.classList.add('hidden');
+    expertButton.classList.add('hidden');
     return;
   }
 
@@ -335,6 +368,7 @@ const displayRoast = (roastText, companyDetails = {}) => {
   roastOutput.innerHTML = buildRoastHtml(sections, companyDetails);
   roastCard.classList.remove('hidden');
   shareButton.classList.remove('hidden');
+  expertButton.classList.remove('hidden');
 };
 
 const showStatus = (message) => {

@@ -23,6 +23,7 @@ body {
   padding: clamp(2rem, 6vw, 4rem);
   background: radial-gradient(circle at top left, rgba(255, 85, 43, 0.12), transparent 55%),
     radial-gradient(circle at bottom right, rgba(5, 86, 103, 0.12), transparent 50%);
+  scrollbar-gutter: stable both-edges;
 }
 
 .app-shell {
@@ -273,8 +274,21 @@ button:disabled {
   box-shadow: 0 30px 54px rgba(255, 85, 43, 0.28);
 }
 
-.secondary-button {
+
+.roast-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
   margin-top: 1.5rem;
+}
+
+.roast-actions .secondary-button,
+.roast-actions .expert-button {
+  flex: 1 1 220px;
+  text-align: center;
+}
+
+.secondary-button {
   padding: 0.8rem 2rem;
   background: rgba(21, 21, 21, 0.9);
   color: #f7f4ed;
@@ -285,6 +299,32 @@ button:disabled {
 .secondary-button:hover {
   transform: translateY(-1px);
   background: #151515;
+}
+
+.expert-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.8rem 2rem;
+  border-radius: 999px;
+  background: transparent;
+  border: 1.5px solid rgba(21, 21, 21, 0.18);
+  color: #151515;
+  font-weight: 600;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(21, 21, 21, 0.1);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, background-color 0.25s ease,
+    color 0.25s ease;
+}
+
+.expert-button:hover,
+.expert-button:focus-visible {
+  transform: translateY(-1px);
+  background: #151515;
+  color: #f7f4ed;
+  box-shadow: 0 20px 40px rgba(21, 21, 21, 0.18);
 }
 
 .status {
