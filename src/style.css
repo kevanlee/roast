@@ -1,7 +1,7 @@
-@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@400;600&display=swap');
 
 :root {
-  font-family: 'Space Grotesk', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
+  font-family: 'Outfit', 'Inter', system-ui, -apple-system, BlinkMacSystemFont,
     'Segoe UI', sans-serif;
   background-color: #f7f4ed;
   color: #151515;
@@ -21,8 +21,7 @@ body {
   align-items: center;
   justify-content: center;
   padding: clamp(2rem, 6vw, 4rem);
-  background: radial-gradient(circle at top left, rgba(255, 85, 43, 0.12), transparent 55%),
-    radial-gradient(circle at bottom right, rgba(5, 86, 103, 0.12), transparent 50%);
+  background: linear-gradient(180deg, #ffffff 0%, #ffffff 30%, #d9ff42 100%);
   scrollbar-gutter: stable both-edges;
 }
 
@@ -35,7 +34,6 @@ body.modal-open {
   background: linear-gradient(135deg, rgba(255, 255, 255, 0.96), rgba(247, 244, 237, 0.96));
   border-radius: 32px;
   padding: clamp(2.5rem, 5vw, 4rem);
-  border: 1px solid rgba(20, 20, 20, 0.08);
   box-shadow: 0 30px 90px rgba(26, 29, 31, 0.12);
   display: grid;
   gap: 2.75rem;
@@ -97,6 +95,7 @@ body.modal-open {
   letter-spacing: -0.015em;
   text-transform: uppercase;
   line-height: 1.05;
+  font-weight: 600;
 }
 
 .hero h1 span {
@@ -266,16 +265,16 @@ button:disabled {
 .primary-button {
   justify-self: start;
   padding: 0.95rem 2.6rem;
-  background: #ff552b;
-  color: #fffaf2;
-  box-shadow: 0 24px 44px rgba(255, 85, 43, 0.2);
+  background: #000eff;
+  color: #ffffff;
+  box-shadow: 0 24px 44px rgba(0, 14, 255, 0.2);
   text-transform: uppercase;
   letter-spacing: 0.08em;
 }
 
 .primary-button:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 30px 54px rgba(255, 85, 43, 0.28);
+  box-shadow: 0 30px 54px rgba(0, 14, 255, 0.35);
 }
 
 
@@ -294,15 +293,15 @@ button:disabled {
 
 .secondary-button {
   padding: 0.8rem 2rem;
-  background: rgba(21, 21, 21, 0.9);
-  color: #f7f4ed;
+  background: #d9ff42;
+  color: #050505;
   letter-spacing: 0.05em;
   text-transform: uppercase;
 }
 
 .secondary-button:hover {
   transform: translateY(-1px);
-  background: #151515;
+  background: #c4ea2c;
 }
 
 .expert-button {
