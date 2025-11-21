@@ -7,7 +7,7 @@ const TOOL_SECTIONS = [
     defaultTools: [
       'Slack',
       'Microsoft Teams',
-      'HubSpot',
+      'Google Docs',
       'Salesforce',
       'Google Drive',
       'Dropbox',
@@ -601,18 +601,22 @@ form.addEventListener('submit', async (event) => {
     displayRoast(roast, companyDetails);
     showStatus('');
 
-    // 3️⃣ SEND TO GOOGLE SHEETS
-    await fetch("https://script.google.com/macros/s/AKfycbwii4GICpvR4jxV9cZyP4vzMD7zA85bL1wquqgij1P8hbb8m8S7-oVBmjTKKl4WN_t3NA/exec", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
+    // 3️⃣ SEND TO GOOGLE DOCS VIA NETLIFY FUNCTION
+    const googleDocsResponse = await fetch('/.netlify/functions/google-docs', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         email: companyDetails.email,
         companyName: companyDetails.name,
         companySize: companyDetails.size,
-        techStack: toolList.join(", "),
-        roast: roast
-      })
+        techStack: toolList.join(', '),
+        roast,
+      }),
     });
+
+    if (!googleDocsResponse.ok) {
+      throw new Error('Google Docs integration failed');
+    }
 
   } catch (error) {
     console.error(error);
