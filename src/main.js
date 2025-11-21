@@ -591,31 +591,29 @@ form.addEventListener('submit', async (event) => {
   toggleFormDisabled(true);
 
   try {
-    // 1️⃣ Send the contact + tech stack to HubSpot BEFORE roasting
-    // (HubSpot doesn't care about the roast; only the values from the form)
-    await fetch('/.netlify/functions/hubspot-contact', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        email: companyDetails.email,
-        companyName: companyDetails.name,
-        companySize: companyDetails.size,
-        techStack: toolList.join(', '),
-      }),
-    }).catch((err) => {
-      console.error('HubSpot sync failed:', err);
-      // We will NOT block the roast if HubSpot fails
-    });
-
-    // 2️⃣ Call OpenAI to generate the roast
+    // 1️⃣ CALL OPENAI FIRST
     const roast = await callOpenAI({
       toolSummary: toolList.join(', '),
       companyDetails,
     });
 
-    // 3️⃣ Show roast results
+    // 2️⃣ DISPLAY ROAST
     displayRoast(roast, companyDetails);
     showStatus('');
+
+    // 3️⃣ SEND TO GOOGLE SHEETS
+    await fetch("https://script.google.com/macros/s/AKfycbwii4GICpvR4jxV9cZyP4vzMD7zA85bL1wquqgij1P8hbb8m8S7-oVBmjTKKl4WN_t3NA/exec", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: companyDetails.email,
+        companyName: companyDetails.name,
+        companySize: companyDetails.size,
+        techStack: toolList.join(", "),
+        roast: roast
+      })
+    });
+
   } catch (error) {
     console.error(error);
     displayRoast('', companyDetails);
@@ -624,6 +622,7 @@ form.addEventListener('submit', async (event) => {
     toggleFormDisabled(false);
   }
 });
+
 
 
 console.log('API key loaded:', !!import.meta.env.VITE_OPENAI_API_KEY);
