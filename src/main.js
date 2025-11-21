@@ -591,18 +591,17 @@ form.addEventListener('submit', async (event) => {
   toggleFormDisabled(true);
 
   try {
-    // 1️⃣ CALL OPENAI FIRST
+    // 1️⃣ First call OpenAI
     const roast = await callOpenAI({
       toolSummary: toolList.join(', '),
       companyDetails,
     });
 
-    // 2️⃣ DISPLAY ROAST
     displayRoast(roast, companyDetails);
     showStatus('');
 
-    // 3️⃣ SEND TO GOOGLE DOCS VIA NETLIFY FUNCTION
-    const googleDocsResponse = await fetch('/.netlify/functions/google-docs', {
+    // 2️⃣ THEN call your Google Docs Netlify function
+    await fetch('/.netlify/functions/google-docs', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -610,13 +609,9 @@ form.addEventListener('submit', async (event) => {
         companyName: companyDetails.name,
         companySize: companyDetails.size,
         techStack: toolList.join(', '),
-        roast,
+        roast: roast,
       }),
     });
-
-    if (!googleDocsResponse.ok) {
-      throw new Error('Google Docs integration failed');
-    }
 
   } catch (error) {
     console.error(error);
