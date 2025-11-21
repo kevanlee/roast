@@ -6,6 +6,9 @@ exports.handler = async function handler(event) {
   console.log("Raw body:", event.body);
 };
 
+console.log("🔥 HubSpot function loaded!");
+
+
 exports.handler = async function handler(event) {
   if (event.httpMethod !== "POST") {
     return {
