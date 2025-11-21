@@ -591,10 +591,29 @@ form.addEventListener('submit', async (event) => {
   toggleFormDisabled(true);
 
   try {
+    // 1️⃣ Send the contact + tech stack to HubSpot BEFORE roasting
+    // (HubSpot doesn't care about the roast; only the values from the form)
+    await fetch('/.netlify/functions/hubspot-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        email: companyDetails.email,
+        companyName: companyDetails.name,
+        companySize: companyDetails.size,
+        techStack: toolList.join(', '),
+      }),
+    }).catch((err) => {
+      console.error('HubSpot sync failed:', err);
+      // We will NOT block the roast if HubSpot fails
+    });
+
+    // 2️⃣ Call OpenAI to generate the roast
     const roast = await callOpenAI({
       toolSummary: toolList.join(', '),
       companyDetails,
     });
+
+    // 3️⃣ Show roast results
     displayRoast(roast, companyDetails);
     showStatus('');
   } catch (error) {
@@ -605,6 +624,7 @@ form.addEventListener('submit', async (event) => {
     toggleFormDisabled(false);
   }
 });
+
 
 console.log('API key loaded:', !!import.meta.env.VITE_OPENAI_API_KEY);
 

@@ -25,57 +25,78 @@ exports.handler = async function handler(event) {
     };
   }
 
-  const { email, companyName, companySize } = payload;
+  const { email, companyName, companySize, techStack } = payload;
 
-  if (!email || !companyName || !companySize) {
+  if (!email) {
     return {
       statusCode: 400,
-      body: JSON.stringify({
-        error: "Missing required fields: email, companyName, companySize",
-      }),
+      body: JSON.stringify({ error: "Email is required." }),
     };
   }
 
-  const hubspotUrl = `https://api.hubapi.com/contacts/v1/contact/createOrUpdate/email/${encodeURIComponent(
-    email
-  )}`;
-
-  try {
-    const response = await fetch(hubspotUrl, {
+  // 1️⃣ Create/update the contact
+  const contactResponse = await fetch(
+    "https://api.hubapi.com/crm/v3/objects/contacts",
+    {
       method: "POST",
       headers: {
         Authorization: `Bearer ${HUBSPOT_TOKEN}`,
         "Content-Type": "application/json",
       },
       body: JSON.stringify({
-        properties: [
-          { property: "email", value: email },
-          { property: "company", value: companyName },
-          { property: "company_size", value: companySize },
+        properties: {
+          email,
+          company: companyName || "",
+          company_size: companySize || "",
+          tech_stack_input: techStack || "",
+        },
+      }),
+    }
+  );
+
+  const contactData = await contactResponse.json();
+
+  if (!contactResponse.ok) {
+    return {
+      statusCode: contactResponse.status,
+      body: JSON.stringify({
+        error: "Failed to create/update contact",
+        details: contactData,
+      }),
+    };
+  }
+
+  const contactId = contactData.id;
+
+  // 2️⃣ Optional: add a Note to the timeline
+  if (techStack) {
+    await fetch("https://api.hubapi.com/crm/v3/objects/notes", {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${HUBSPOT_TOKEN}`,
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        properties: {
+          hs_note_body: `Tech Stack Submitted:\n${techStack}`,
+        },
+        associations: [
+          {
+            to: { id: contactId },
+            types: [
+              { associationCategory: "HUBSPOT_DEFINED", associationTypeId: 202 },
+            ],
+          },
         ],
       }),
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      return {
-        statusCode: response.status,
-        body: JSON.stringify({
-          error: data.message || "Failed to create or update contact",
-          details: data,
-        }),
-      };
-    }
-
-    return {
-      statusCode: 200,
-      body: JSON.stringify({ message: "Contact created or updated", data }),
-    };
-  } catch (error) {
-    return {
-      statusCode: 500,
-      body: JSON.stringify({ error: "Unexpected error", details: error.message }),
-    };
   }
+
+  return {
+    statusCode: 200,
+    body: JSON.stringify({
+      message: "Contact synced successfully",
+      contactId,
+    }),
+  };
 };
