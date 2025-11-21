@@ -14,6 +14,17 @@ export default [
         navigator: 'readonly',
         setTimeout: 'readonly',
       },
-    }
-  }
+    },
+  },
+  {
+    files: ['netlify/functions/**/*.js'],
+    languageOptions: {
+      sourceType: 'commonjs',
+      globals: {
+        process: 'readonly',
+        exports: 'readonly',
+        fetch: 'readonly',
+      },
+    },
+  },
 ];
