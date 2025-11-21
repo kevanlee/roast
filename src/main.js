@@ -136,7 +136,7 @@ app.innerHTML = `
   <main class="app-shell">
     <nav class="site-nav">
       <div class="nav-logo" aria-label="PRMT logo"><img src="/img/prmt-logo-white.png"></div>
-      <a href="https://prmt.com"><button type="button" class="nav-cta">Talk to an expert</button></a>
+      <a href="https://prmt.com/contact"><button type="button" class="nav-cta">Talk to an expert</button></a>
     </nav>
     <header class="hero">
       <h1>Roast My Tech Stack</h1>

@@ -1,6 +1,12 @@
 const HUBSPOT_TOKEN = process.env.HUBSPOT_PRIVATE_APP_TOKEN;
 
 exports.handler = async function handler(event) {
+  console.log("🔥 Function triggered");
+  console.log("HTTP method:", event.httpMethod);
+  console.log("Raw body:", event.body);
+};
+
+exports.handler = async function handler(event) {
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
